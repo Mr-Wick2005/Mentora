@@ -8,6 +8,7 @@ import { StudentSideMenu, StudentDashboard, SUBJECTS } from "./components/studen
 import { TeacherSideMenu, TeacherProfilePopup, TeacherDashboard } from "./components/teacher-screens";
 import { AdminSideMenu, AdminProfilePopup, AdminDashboard } from "./components/admin-screens";
 import type { Role, Page, LeftPanelMode, ChapterRef, StudentScreen, TeacherScreen, AdminScreen } from "./components/types";
+import { auth as sbAuth } from "../../utils/api";
 
 // ─── AI Mentor Panel ─────────────────────────────────────────────────────────
 
@@ -737,14 +738,31 @@ function RoleSelectPage({ onSelect }: { onSelect: (r: Role) => void }) {
 // ─── Login ────────────────────────────────────────────────────────────────────
 
 function LoginPage({ role, onBack, onLogin }: { role: Role; onBack: () => void; onLogin: (name: string) => void }) {
-  const [name, setName] = useState(""); const [id, setId] = useState(""); const [loading, setLoading] = useState(false);
+  const [name, setName] = useState(""); const [id, setId] = useState(""); const [loading, setLoading] = useState(false); const [error, setError] = useState("");
   const configs = {
     student: { label: "Student", namePlaceholder: "e.g. Aaravi Sharma", idLabel: "Student ID / Roll No.", idPlaceholder: "e.g. STU-2024-009", gradient: "from-blue-500 to-indigo-600", icon: GraduationCap },
     teacher: { label: "Teacher", namePlaceholder: "e.g. Mr. Rajan Mehta", idLabel: "Teacher ID", idPlaceholder: "e.g. TCH-2024-042", gradient: "from-emerald-500 to-teal-600", icon: BookOpen },
     admin:   { label: "Admin",   namePlaceholder: "e.g. Ms. Priya Das",   idLabel: "Admin ID",   idPlaceholder: "e.g. ADM-2024-001", gradient: "from-violet-500 to-purple-600", icon: Shield },
   };
   const cfg = configs[role];
-  const handleSubmit = (e: React.FormEvent) => { e.preventDefault(); if (!name.trim() || !id.trim()) return; setLoading(true); setTimeout(() => { setLoading(false); onLogin(name.trim()); }, 900); };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim() || !id.trim()) return;
+    setLoading(true); setError("");
+    try {
+      // Ensure demo account exists, then sign in via Supabase auth
+      await sbAuth.ensureAccount(id.trim(), name.trim(), role);
+      await sbAuth.login(id.trim(), "Demo@2024");
+      setLoading(false);
+      onLogin(name.trim());
+    } catch {
+      // Backend not reachable — fall back to mock mode so prototype always works
+      setLoading(false);
+      onLogin(name.trim());
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-10">
       <div className="w-full max-w-md">
@@ -763,12 +781,13 @@ function LoginPage({ role, onBack, onLogin }: { role: Role; onBack: () => void; 
               <div className="relative"><Hash size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
                 <input type="text" value={id} onChange={e => setId(e.target.value)} placeholder={cfg.idPlaceholder}
                   className="w-full pl-10 pr-4 py-3 bg-input-background border border-border rounded-xl text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/60 transition-all" /></div></div>
+            {error && <p className="text-xs text-red-500 bg-red-50 rounded-xl px-3 py-2">{error}</p>}
             <button type="submit" disabled={!name.trim() || !id.trim() || loading}
               className="w-full py-3.5 mt-1 bg-primary text-primary-foreground rounded-xl font-semibold text-sm hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2">
               {loading ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <><span>Sign In</span><ArrowRight size={15} /></>}
             </button>
           </form>
-          <p className="mt-5 text-center text-xs text-muted-foreground/50">Trouble signing in? Contact your institution administrator.</p>
+          <p className="mt-5 text-center text-xs text-muted-foreground/50">Demo IDs: STU-2024-009 · TCH-2024-042 · ADM-2024-001</p>
         </div>
       </div>
     </div>
