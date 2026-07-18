@@ -1,0 +1,5 @@
+- [x] Update `ic_launcher_background.xml` to black
+- [x] Replace `ic_launcher.png` in all resolutions
+- [x] Replace `ic_launcher_round.png` in all resolutions
+- [x] Replace `ic_launcher_foreground.png` in all resolutions
+- [x] Verify the changes by checking the UI or deploying

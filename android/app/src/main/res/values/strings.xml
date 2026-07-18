@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">AI Smart Notebook</string>
+    <string name="title_activity_main">AI Smart Notebook</string>
+    <string name="package_name">com.mentoratech.aismartnotebook</string>
+    <string name="custom_url_scheme">com.mentoratech.aismartnotebook</string>
+</resources>
